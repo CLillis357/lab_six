@@ -16,9 +16,51 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.get('/api/movies', (req, res) => {
-    const movies = [
-        {
+const mongoose = require('mongoose');
+mongoose.connect('mongodb+srv://admin:admin@cluster0.crwpe.mongodb.net/DB11');
+
+const movieSchema = new mongoose.Schema({
+  title: String,
+  year: String,
+  poster: String
+});
+
+const Movie = mongoose.model('Movie', movieSchema);
+
+/*app.get('/api/movies', ...): Sets up a GET route at /api/movies, which will return all movies.
+Movie.find({}) is called. The empty object {} as an argument means it fetches all documents in the movies collection.*/
+
+app.get('/api/movies', async(req, res) => {
+    const movies = await Movie.find({});
+    res.json(movies);
+});
+
+/*app.get('/api/movie/:id', ...): Defines a GET route at /api/movie/:id, where :id is a parameter for the movie’s unique ID.
+Movie.findById(req.params.id): This method searches the movies collection for a document with the ID provided in the URL.*/
+
+app.get('/api/movie/:id', async (req, res) => {
+  const movie = await Movie.findById(req.params.id);
+  res.send(movies);
+});
+
+//async and await are used to handle asynchronous operations like saving data to a database.
+//app.post('/api/movies', ...): This sets up a POST route at /api/movies, which will be used to add new movies.
+app.post('/api/movies',async(req, res)=>{
+    console.log(req.body.title);
+
+    const { title, year, poster } = req.body;
+    const newMovie = new Movie({ title, year, poster });
+    await newMovie.save();
+
+
+    res.status(201).json({ message: 'Movie created successfully', movie: newMovie });
+})
+
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
+
+/*{
           "Title": "Avengers: Infinity War (server)",
           "Year": "2018",
           "imdbID": "tt4154756",
@@ -38,16 +80,4 @@ app.get('/api/movies', (req, res) => {
           "imdbID": "tt0816711",
           "Type": "movie",
           "Poster": "https://m.media-amazon.com/images/M/MV5BNDQ4YzFmNzktMmM5ZC00MDZjLTk1OTktNDE2ODE4YjM2MjJjXkEyXkFqcGdeQXVyNTA4NzY1MzY@._V1_SX300.jpg"
-        }
-      ];
-    res.status(200).json({movies})
-});
-
-app.post('/api/movies',(req, res)=>{
-    console.log(req.body.title);
-    res.send("Movie Added!");
-})
-
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
+        }*/
